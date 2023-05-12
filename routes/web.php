@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\weatherController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/weather',[weatherController::class,'index'])->name('home');
+Route::post('/weather',[weatherController::class,'store'])->name('search');
