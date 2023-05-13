@@ -16,14 +16,56 @@
     }
     .history{
         width: auto;
+        border-radius: 2rem;
     }
     .info{
-        width: 100%;
+        width: 83%;
         padding: 20px;
         margin-left: 10px;
     }
     .center{
         text-align: center;
+    }
+
+    .card{
+      border-radius: 2rem !important;
+    }
+    .card-header{
+      border-radius: 2rem 2rem 0 0 !important;
+    }
+
+    #view-history{
+      display: none;
+    }
+    .reset{
+      background: white;
+      border-radius: 3rem;
+      padding: 0rem;
+      margin-top: -1px;
+    }
+
+    @media(max-width: 768px){
+      .main{
+        flex-direction: column;
+      }
+      .history{
+        width: 100%;
+      }
+      .info{
+        width: 100%;
+        margin-left: 0px;
+      }
+
+      #view-history{
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
+      }
+
+      .list-history{
+        display: none; 
+      }
     }
   </style>
 </head>
@@ -67,50 +109,44 @@
            
         <div class="d-flex mt-4 main">
             <div class="bg-dark history center">
-                <h1 class="text-light">Historial</h1>
-                @foreach ($history as $history_item)
-                    <ul class="list-group">
-                        <li class="list-group-item">
-                            <a href="{{route('history',['id'=>$history_item->id])}}" style="text-decoration: none; color:gray">
-                                {{$history_item->name_city}} - {{$history_item->created_at}}
-                            </a>
-                        </li>
-                    </ul>
-                @endforeach
+              <div class="d-flex justify-content-center align-items-center my-2">
+                <h1 class="text-light small">Historial</h1>
+                <a href="{{route('clear')}}" class="btn btn-sm mx-2 reset">
+                  <img src="{{asset('assets/icons/update_sync_reload_reset_icon_229478.png')}}" alt="Limpiar" title="Limpiar Historial" width="25px">
+                </a>
+              </div>
+                <button type="button" class="btn btn-sm btn-warning mb-2" id="view-history">
+                    Ver historial
+                </button>
+                <div class="list-history mx-2">
+                  @foreach ($history as $history_item)
+                      <ul class="list-group">
+                          <li class="list-group-item mb-2">
+                              <a href="{{route('history',['id'=>$history_item->id])}}" style="text-decoration: none; color:gray">
+                                  {{$history_item->name_city}} <br>
+                                  {{$history_item->created_at}}
+                              </a>
+                              <form action="{{route('delete', $history_item->id)}}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm">
+                                  <img src="{{asset('assets/icons/trash_bin_icon-icons.com_67981.png')}}" alt="Eliminar" title="Eliminar!" width="20px">
+                                </button>
+                              </form>
+                          </li>
+                      </ul>
+                  @endforeach
+                </div>
             </div>
 
             
             <div class="bg-light ml-5 info">
                 @if (isset($status) && isset($data))
-                    <h1 class="center">Informacion</h1>
-                    <h2 class="center">Ciudad: {{$data->name}}</h2>
-                    <h2>Condiciones Climaticas Actuales</h2>
-                    <p><strong>Temperatura: </strong>{{$data->main->temp}}</p>
-                    <p><strong>Sensacion termica: </strong>{{$data->main->feels_like}}</p>
-                    <p><strong>Temperatura minima: </strong>{{$data->main->temp_min}}</p>
-                    <p><strong>Temperatura maxima: </strong>{{$data->main->temp_max}}</p>
-                    <p><strong>Presion: </strong>{{$data->main->pressure}}</p>
-                    <p><strong>Humedad: </strong>{{$data->main->humidity}}</p>
-
-                    <h2>Ubicacion</h2>
-                    <p><strong>Longitud: </strong>{{$data->coord->lon}}</p>
-                    <p><strong>Latitud: </strong>{{$data->coord->lat}}</p>
+                    @include('component.card-info', ["name" => $data->name, "weather" => $data->main, "coord" => $data->coord])
                     <div id="map"></div>
 
                 @elseif(isset($history_detail) && !@empty($history_detail))
-                    <h1 class="center">Informacion</h1>
-                    <h2 class="center">Ciudad: {{$history_detail->name_city}}</h2>
-                    <h2>Condiciones Climaticas A la Fecha: {{$history_detail->created_at}}</h2>
-                    <p><strong>Temperatura: </strong>{{$history_detail->temp}}</p>
-                    <p><strong>Sensacion termica: </strong>{{$history_detail->feels_like}}</p>
-                    <p><strong>Temperatura minima: </strong>{{$history_detail->temp_min}}</p>
-                    <p><strong>Temperatura maxima: </strong>{{$history_detail->temp_max}}</p>
-                    <p><strong>Presion: </strong>{{$history_detail->pressure}}</p>
-                    <p><strong>Humedad: </strong>{{$history_detail->humidity}}</p>
-
-                    <h2>Ubicacion</h2>
-                    <p><strong>Longitud: </strong>{{$history_detail->longitude}}</p>
-                    <p><strong>Latitud: </strong>{{$history_detail->latitude}}</p>
+                  @include('component.card-info', ["name" => $history_detail->name, "weather" => $history_detail->main, "coord" => $history_detail->coord])
                     <div id="map"></div> 
                         <?php
                         $data= json_decode('{
@@ -153,6 +189,25 @@
 
     // Agregar un marcador en la ubicación
     L.marker([lat, lon]).addTo(map);
-  </script>  
+  </script>
+  
+  <script>
+    /* ready function vanila js */
+    document.addEventListener('DOMContentLoaded', function() {
+        /* evento click */
+        document.getElementById('view-history').addEventListener('click', function() {
+            /* obtenemos el elemento */
+            var element = document.querySelector('.list-history');
+            /* verify if have display none */
+            if (element.style.display == 'block') {
+                element.style.display = 'none';
+                this.innerHTML = 'Ver historial';
+                return;
+            }
+            element.style.display = 'block';
+            this.innerHTML = 'Ocultar historial';
+        });
+    });
+  </script>
 </body>
 </html>
