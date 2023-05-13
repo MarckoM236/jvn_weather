@@ -20,3 +20,4 @@ Route::get('/', function () {
 
 Route::get('/weather',[weatherController::class,'index'])->name('home');
 Route::post('/weather',[weatherController::class,'store'])->name('search');
+Route::get('/weather/{id}',[weatherController::class,'show'])->name('history');
